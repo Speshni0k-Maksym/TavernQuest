@@ -1,0 +1,237 @@
+﻿@{
+    ViewData["Title"] = "Tavern Quest — Tavern System";
+    var menu = (ValueTuple<string, decimal>[])ViewBag.Menu;
+    var roll1 = (int)ViewBag.Roll1;
+    var roll2 = (int)ViewBag.Roll2;
+}
+
+<style>
+    .tq-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: #e0e0e0;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .tq-header h1 { color: #e94560; font-weight: 700; }
+    .tq-header p  { color: #a8a8b3; margin-bottom: 0; }
+
+    .tq-table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .tq-table thead th {
+        background: #2c3e50; color: #fff;
+        font-weight: 600; border: none; padding: 0.85rem 1rem;
+    }
+    .tq-table tbody td {
+        vertical-align: middle; padding: 1rem; border-color: #ecf0f1;
+    }
+    .tq-table tbody tr:nth-child(odd) { background: #fafbfc; }
+    .tq-table tbody tr:nth-child(even) { background: #fff; }
+
+    .badge-singleton { background: #e94560; color: #fff; }
+    .badge-scoped    { background: #0f3460; color: #fff; }
+    .badge-transient { background: #e9b145; color: #1a1a2e; }
+    .tq-badge {
+        font-size: 0.8rem; padding: 0.35em 0.75em;
+        border-radius: 6px; font-weight: 600;
+    }
+
+    .tq-counter-box {
+        background: linear-gradient(90deg, #e94560 0%, #c62a47 100%);
+        color: #fff; border-radius: 10px;
+        padding: 1.2rem 1.5rem; margin: 1.5rem 0;
+        display: flex; align-items: center; gap: 1rem;
+        box-shadow: 0 2px 10px rgba(233,69,96,0.3);
+    }
+    .tq-counter-box .counter-num { font-size: 2rem; font-weight: 800; }
+    .tq-counter-box .counter-label { font-size: 0.85rem; opacity: 0.9; }
+
+    .tq-explain-card {
+        border-left: 5px solid; border-radius: 8px;
+        padding: 1.2rem 1.5rem; margin-bottom: 1rem;
+        background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .tq-explain-card h5 { margin-bottom: 0.4rem; font-weight: 700; }
+    .tq-explain-card p  { margin-bottom: 0; color: #555; font-size: 0.92rem; }
+    .explain-singleton { border-color: #e94560; }
+    .explain-scoped    { border-color: #0f3460; }
+    .explain-transient { border-color: #e9b145; }
+
+    .same-instance-badge {
+        display: inline-block; padding: 0.2em 0.6em;
+        border-radius: 4px; font-size: 0.85rem; font-weight: 600;
+    }
+    .same-no  { background: #d4edda; color: #155724; }
+    .same-yes { background: #f8d7da; color: #721c24; }
+
+    /* Menu styles */
+    .menu-table { font-size: 0.9rem; }
+    .menu-table thead th {
+        background: #34495e; color: #fff;
+        font-weight: 600; border: none; padding: 0.6rem 0.8rem;
+    }
+    .menu-table tbody td { padding: 0.5rem 0.8rem; border-color: #ecf0f1; }
+    .menu-table tbody tr:nth-child(odd) { background: #fafbfc; }
+    .menu-table tbody tr:nth-child(even) { background: #fff; }
+    .menu-highlight { background: #fff3cd !important; font-weight: 600; }
+    .roll-arrow {
+        display: inline-block; font-size: 1.1rem;
+        color: #e94560; margin-left: 0.3rem;
+    }
+</style>
+
+<!-- Header -->
+<div class="tq-header text-center">
+    <h1>⚔️ Tavern Quest — Tavern System</h1>
+    <p>Refresh the page (F5) several times and observe the changes</p>
+</div>
+
+<!-- Services Table -->
+<div class="table-responsive mb-3">
+    <table class="table tq-table mb-0">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Service</th>
+                <th style="width: 55%;">Details</th>
+                <th style="width: 20%;" class="text-center">Lifetime</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <strong>🍻 Tavern Keeper</strong><br />
+                    <span class="text-muted small">Singleton — one for the entire app</span>
+                </td>
+                <td>
+                    <strong>Name:</strong> @ViewBag.KeeperName<br />
+                    <strong>Total visitors:</strong> @ViewBag.TotalVisitors
+                </td>
+                <td class="text-center">
+                    <span class="tq-badge badge-singleton">Singleton</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>📜 Visit</strong><br />
+                    <span class="text-muted small">Scoped — one per request</span>
+                </td>
+                <td>
+                    <strong>ID:</strong> <code>@ViewBag.VisitId</code><br />
+                    <strong>Orders:</strong> (chosen by dice 🎲)
+                    <ul class="mb-1">
+                        @foreach (var order in (List<string>)ViewBag.Orders)
+                        {
+                            <li>@order</li>
+                        }
+                    </ul>
+                    <strong>Bill: @($"{ViewBag.TotalBill:C}")</strong>
+                </td>
+                <td class="text-center">
+                    <span class="tq-badge badge-scoped">Scoped</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>🎲 Dice</strong><br />
+                    <span class="text-muted small">Transient — new every time</span>
+                </td>
+                <td>
+                    <strong>Dice #1:</strong> @ViewBag.Roll1 → <em>@ViewBag.Dish1</em><br />
+                    <strong>Dice #2:</strong> @ViewBag.Roll2 → <em>@ViewBag.Dish2</em><br />
+                    <strong>Same instance?</strong>
+                    @if ((bool)ViewBag.DiceSameInstance)
+                    {
+                        <span class="same-instance-badge same-yes">Yes — same instance!</span>
+                    }
+                    else
+                    {
+                        <span class="same-instance-badge same-no">No — different instances</span>
+                    }
+                </td>
+                <td class="text-center">
+                    <span class="tq-badge badge-transient">Transient</span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Singleton Counter Highlight -->
+<div class="tq-counter-box">
+    <div>
+        <span class="counter-num">@ViewBag.TotalVisitors</span>
+    </div>
+    <div>
+        <strong>Singleton visitor counter</strong><br />
+        <span class="counter-label">This number increases with every page refresh because the Singleton lives for the entire lifetime of the application.</span>
+    </div>
+</div>
+
+<!-- Tavern Menu (20 dishes) -->
+<h4 class="mt-4 mb-3">🍽️ Tavern Menu — 20 Dishes (d20)</h4>
+<p class="text-muted small mb-2">Each dice roll (1–20) picks a dish. Highlighted rows are today's order.</p>
+
+<div class="table-responsive mb-4">
+    <table class="table menu-table tq-table mb-0">
+        <thead>
+            <tr>
+                <th style="width: 10%;">Roll</th>
+                <th>Dish</th>
+                <th style="width: 15%;" class="text-end">Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < menu.Length; i++)
+            {
+                var rollNum = i + 1;
+                var isOrdered = rollNum == roll1 || rollNum == roll2;
+                <tr class="@(isOrdered ? "menu-highlight" : "")">
+                    <td>
+                        @rollNum
+                        @if (rollNum == roll1)
+                        {
+                            <span class="roll-arrow">🎲①</span>
+                        }
+                        @if (rollNum == roll2)
+                        {
+                            <span class="roll-arrow">🎲②</span>
+                        }
+                    </td>
+                    <td>@menu[i].Item1</td>
+                    <td class="text-end">@($"{menu[i].Item2:C}")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Explanation Section -->
+<h4 class="mt-4 mb-3">What We Observe</h4>
+
+<div class="tq-explain-card explain-singleton">
+    <h5>🍻 Singleton — The Tavern Keeper is always the same</h5>
+    <p>
+        The keeper <strong>never changes</strong>, no matter how many times you refresh the page.
+        It is a single object for the entire lifetime of the application.
+        The visitor counter grows with every request.
+    </p>
+</div>
+
+<div class="tq-explain-card explain-scoped">
+    <h5>📜 Scoped — A new visit on every request</h5>
+    <p>
+        On every page refresh a <strong>new Visit ID</strong> and a new bill are generated.
+        However, within a single request all components receive the <strong>same instance</strong> of VisitService.
+    </p>
+</div>
+
+<div class="tq-explain-card explain-transient">
+    <h5>🎲 Transient — Every dice is independent</h5>
+    <p>
+        Dice #1 and Dice #2 are <strong>two different instances</strong> of DiceService, so their results are independent.
+        Each roll picks a different dish from the menu. Every time someone requests a dice — it's a brand new object with a fresh roll.
+    </p>
+</div>
